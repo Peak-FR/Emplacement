@@ -30,6 +30,31 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         showSection('sectionPlan');
     }
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', async function () {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = '/connexion';
+                } else {
+                    alert('Erreur lors de la déconnexion: ' + (data.erreur || response.statusText));
+                }
+            } catch (error) {
+                console.error('Erreur réseau ou autre lors de la déconnexion:', error);
+                alert('Erreur réseau lors de la déconnexion. Veuillez vérifier votre connexion et réessayer.');
+            }
+        });
+    }
+
     const batchAssignTextarea = document.getElementById('batchAssignProductsTextarea');
     const batchLiberateTextarea = document.getElementById('batchLiberateIdsTextarea');
 
@@ -58,7 +83,41 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    checkLoginStatus();
 });
+
+async function checkLoginStatus() {
+    try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+        const nomUtilisateurConnecteEl = document.getElementById('nomUtilisateurConnecte');
+
+        if (data.connecte) {
+            if (nomUtilisateurConnecteEl) {
+                nomUtilisateurConnecteEl.textContent = `Connecté en tant que ${data.utilisateur}`;
+            }
+            // Si l'utilisateur est connecté et sur la page de connexion, rediriger vers l'accueil
+            if (window.location.pathname === '/connexion' || window.location.pathname === '/connexion/') {
+                window.location.href = '/';
+            }
+        } else {
+            if (nomUtilisateurConnecteEl) {
+                nomUtilisateurConnecteEl.textContent = 'Non connecté';
+            }
+            // Si l'utilisateur n'est pas connecté et n'est pas sur la page de connexion, rediriger
+            if (window.location.pathname !== '/connexion' && window.location.pathname !== '/connexion/') {
+                window.location.href = '/connexion';
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors de la vérification du statut de connexion:', error);
+        // Gérer le cas où l'API n'est pas joignable (ne pas rediriger en boucle)
+        if (window.location.pathname !== '/connexion' && window.location.pathname !== '/connexion/') {
+            // Peut-être afficher un message à l'utilisateur au lieu de rediriger
+            // pour éviter des boucles si le serveur est en panne.
+        }
+    }
+}
 
 function showSection(sectionIdToShow) {
     const sections = document.querySelectorAll('#mainContent .container .section');
@@ -190,7 +249,7 @@ async function findOptimalEmplacementShared(isAlleeJOnly) {
     if (resultDiv) {
         resultDiv.innerHTML = messageChargement;
     }
-    if (assignationFormSection) { 
+    if (assignationFormSection) {
         assignationFormSection.classList.add('hidden');
     }
 
@@ -298,7 +357,7 @@ async function submitQuickAssignProduct() {
     const eparpillementTotal = document.getElementById('quickAssignEparpillementTotal').checked;
     const resultDiv = document.getElementById('quickAssignResult');
 
-    if (!nomProduit || !idProduit) { 
+    if (!nomProduit || !idProduit) {
         resultDiv.innerHTML = '<p class="error-message">Veuillez entrer le nom ET l_ID du produit.</p>';
         return;
     }
@@ -380,7 +439,7 @@ async function submitLiberation(emplacementId, resultDisplayDivId = null) {
             }
             else if (optimalResultDiv && optimalResultDiv.innerHTML.includes(emplacementId) && resultDisplayDivId === 'optimalEmplacementResult') {
                 optimalResultDiv.innerHTML = "<p>L'emplacement précédemment suggéré a été libéré. Effectuez une nouvelle recherche.</p>";
-                if (emplacementIdInput && emplacementIdInput.value === emplacementId) { 
+                if (emplacementIdInput && emplacementIdInput.value === emplacementId) {
                     getEmplacementDetails();
                 }
             }
@@ -436,14 +495,14 @@ async function submitBatchLiberation() {
                                 </tr>
                             </thead>
                             <tbody>`;
-            
+
             for (const id_emp_cible in responseData.details) {
                 const detail = responseData.details[id_emp_cible];
 
                 let statutAffichage = detail.status_final || detail.status;
                 let messageAffichage = detail.message_final || detail.message_operation;
 
-                switch(statutAffichage) {
+                switch (statutAffichage) {
                     case "LIBERE_SUCCES": statutAffichage = "Libéré avec succès"; break;
                     case "DEJA_LIBRE": statutAffichage = "Déjà libre"; break;
                     case "NON_TROUVE": statutAffichage = "Non trouvé"; break;
@@ -463,7 +522,7 @@ async function submitBatchLiberation() {
             }
             tableHtml += `</tbody></table>`;
             resultDiv.innerHTML = tableHtml;
-            idsTextarea.value = ''; 
+            idsTextarea.value = '';
         } else if (responseData.erreur) {
             resultDiv.innerHTML = `<p class="error-message">Erreur ${response.status}: ${responseData.erreur}</p>`;
         } else {
@@ -481,7 +540,7 @@ async function processPastedProductsForSizeSpecification() {
     const productsTextarea = document.getElementById('batchAssignProductsTextarea');
     const specifySizesContainer = document.getElementById('specifySizesContainer');
     const resultDiv = document.getElementById('trueBatchAssignResult');
-    
+
 
     resultDiv.innerHTML = "";
     specifySizesContainer.innerHTML = "";
@@ -622,14 +681,14 @@ async function submitFinalBatchAssignProducts() {
             tableHtml += `</tbody></table>`;
             resultDiv.innerHTML = tableHtml;
 
-            if (hasSuccessfulAssignments) { 
-                if (copyButton) { 
+            if (hasSuccessfulAssignments) {
+                if (copyButton) {
                     copyButton.classList.remove('hidden');
                 } else {
                     console.error("ERREUR JS: Le bouton avec l'ID 'copyEmplacementsBtn' est introuvable !");
                 }
             }
-            
+
             document.getElementById('batchAssignProductsTextarea').value = '';
             document.getElementById('specifySizesContainer').innerHTML = '';
             document.getElementById('batchAssignStep2').classList.add('hidden');
@@ -637,7 +696,7 @@ async function submitFinalBatchAssignProducts() {
             produitsPourBatchAvecTailles = [];
 
         } else if (responseData.erreur) {
-             resultDiv.innerHTML = `<p class="error-message">Erreur ${response.status}: ${responseData.erreur}</p>`;
+            resultDiv.innerHTML = `<p class="error-message">Erreur ${response.status}: ${responseData.erreur}</p>`;
         } else {
             resultDiv.innerHTML = `<p class="error-message">Réponse inattendue du serveur (Statut ${response.status}).</p>`;
         }
@@ -659,7 +718,7 @@ function copyAssignedEmplacements() {
         .join('\n');
 
     if (!emplacementsText.trim()) {
-         if (resultDiv) resultDiv.innerHTML += '<br><p class="info-message">Aucun emplacement n_a été assigné dans ce lot.</p>';
+        if (resultDiv) resultDiv.innerHTML += '<br><p class="info-message">Aucun emplacement n_a été assigné dans ce lot.</p>';
         return;
     }
 
@@ -745,14 +804,14 @@ function renderAlleeView(dataAllee, containerDiv) {
                     gridHtml += cells[`${n}-${p}`];
                 }
             }
-            gridHtml += `</div>`; 
+            gridHtml += `</div>`;
 
             currentRackHtml += gridHtml;
-            currentRackHtml += `</div>`; 
+            currentRackHtml += `</div>`;
 
             racksContainerHtml += currentRackHtml;
 
-        }); 
+        });
 
         racksContainerHtml += `</div>`;
 
@@ -839,7 +898,7 @@ async function chargerEtAfficherAllee(lettreAllee, targetRackNumero = null) {
 
         planDetailsDiv.innerHTML = '';
 
-        const titreAllee = document.createElement('h2'); 
+        const titreAllee = document.createElement('h2');
         titreAllee.textContent = `Détails de l'Allée ${dataAllee.lettre_allee}`;
         planDetailsDiv.appendChild(titreAllee);
 
@@ -849,7 +908,7 @@ async function chargerEtAfficherAllee(lettreAllee, targetRackNumero = null) {
         vizContainer.style.overflowX = 'auto';
         planDetailsDiv.appendChild(vizContainer);
 
-        renderAlleeView(dataAllee, vizContainer); 
+        renderAlleeView(dataAllee, vizContainer);
 
         if (targetRackNumero !== null && dataAllee.racks_info && dataAllee.racks_info.length > 0) {
             const targetRackDomId = `rack-view-${lettreAllee}${targetRackNumero}`;
@@ -875,13 +934,13 @@ async function chargerEtAfficherAllee(lettreAllee, targetRackNumero = null) {
 
 
         setTimeout(() => {
-            if (titreAllee) { 
-                titreAllee.scrollIntoView({ 
+            if (titreAllee) {
+                titreAllee.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
                 });
             }
-        }, 150); 
+        }, 150);
 
     } catch (error) {
         console.error(`Erreur lors du chargement de l'allée ${lettreAllee}:`, error);
@@ -905,7 +964,7 @@ async function submitRechercheProduit() {
 
     try {
         const response = await fetch(`/api/produits/rechercher?q=${encodeURIComponent(terme)}`);
-        const data = await response.json(); 
+        const data = await response.json();
 
         if (response.ok) {
             if (data && data.length > 0) {
@@ -919,7 +978,7 @@ async function submitRechercheProduit() {
                                         </tr>
                                 </thead>
                                 <tbody>`;
-                
+
                 data.forEach(emp => {
                     tableHtml += `<tr>
                                       <td>${emp.produit_id || 'N/A'}</td>
@@ -932,7 +991,7 @@ async function submitRechercheProduit() {
             } else {
                 resultDiv.innerHTML = `<p class="info-message">Aucun produit trouvé pour '${terme}'.</p>`;
             }
-        } else { 
+        } else {
             resultDiv.innerHTML = `<p class="error-message">Erreur ${response.status}: ${data.erreur || 'Erreur lors de la recherche.'}</p>`;
         }
     } catch (error) {
@@ -1116,7 +1175,7 @@ function openActionModal() {
 function closeActionModal() {
     modalOverlay.classList.add('hidden');
     actionModal.classList.add('hidden');
-    modalBodyContent.innerHTML = ''; 
+    modalBodyContent.innerHTML = '';
 }
 
 async function assignerProduitViaPlan(idEmplacement, nomProduit, idProduit) {
@@ -1266,7 +1325,7 @@ function reorderWarehousePlanForMobile() {
             });
 
             aisleElements.forEach(el => el.remove());
-            
+
             sortedAisles.forEach(el => {
                 planWrapper.appendChild(el);
             });
@@ -1277,19 +1336,19 @@ function reorderWarehousePlanForMobile() {
     } else {
         if (planWrapper.classList.contains('mobile-plan-sorted')) {
             console.log("Restauration de l'ordre bureau pour le plan (rechargement).");
-             window.location.reload(); 
+            window.location.reload();
 
-             planWrapper.classList.remove('mobile-plan-sorted');
-             planWrapper.classList.add('desktop-plan-sorted');
+            planWrapper.classList.remove('mobile-plan-sorted');
+            planWrapper.classList.add('desktop-plan-sorted');
         }
     }
 }
 
 function debounce(func, wait, immediate) {
     var timeout;
-    return function() {
+    return function () {
         var context = this, args = arguments;
-        var later = function() {
+        var later = function () {
             timeout = null;
             if (!immediate) func.apply(context, args);
         };
