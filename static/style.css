@@ -968,8 +968,9 @@ button:hover {
 
      #resultatsHistorique, #resultatsRechercheProduit, #resultatsStatistiques, #trueBatchAssignResult .resultats-batch-table, .batchLiberateResult .resultats-batch-table 
 {
-    overflow-x: auto;  /* Ajoute une barre de défilement horizontale SI nécessaire */
-    display: block;    /* Important pour que overflow-x fonctionne bien sur un conteneur de table */
-    width: 100%;       /* S'assurer qu'il ne dépasse pas son parent */
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
 }
 }
