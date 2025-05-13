@@ -246,38 +246,60 @@ def assigner_produit_api(id_emplacement_str: str):
 @app.route('/api/emplacements/<string:id_emplacement_str>/liberer', methods=['POST'])
 @login_requis
 def liberer_emplacement_api_route(id_emplacement_str: str):
-    utilisateur_actuel = g.utilisateur_nom
-
+    utilisateur_actuel = g.utilisateur_nom 
     db_session = SessionLocal()
     try:
-        success, message, emplacement_modifie = mon_entrepot.liberer_emplacement_par_id(
+        operation_detail = mon_entrepot.liberer_emplacement_par_id(
             session=db_session,
             id_emplacement_str=id_emplacement_str,
             nom_utilisateur_actionneur=utilisateur_actuel
         )
-        if success:
+
+        if operation_detail.get("status") == "LIBERATION_NECESSAIRE":
             db_session.commit()
+            
+            success_message = f"Emplacement {operation_detail['id_emplacement_str']} libéré avec succès."
+            if operation_detail.get('ancien_produit_nom'):
+                success_message += f" (contenait '{operation_detail.get('ancien_produit_nom', 'N/A')}', ID: {operation_detail.get('ancien_produit_id', 'N/A')})."
+            
             return jsonify({
-                "message": message,
+                "message": success_message,
                 "emplacement": {
-                    "id_emplacement_str": emplacement_modifie.id_emplacement_str,
-                    "est_libre": emplacement_modifie.est_libre,
-                    "produit_nom": emplacement_modifie.produit_nom,
-                    "produit_id": emplacement_modifie.produit_id
+                    "id_emplacement_str": operation_detail["id_emplacement_str"],
+                    "est_libre": True,
+                    "produit_nom": None,
+                    "produit_id": None
                 }
             }), 200
         else:
             db_session.rollback()
-            status_code = 409
-            if "non trouvé" in message.lower():
+            
+            error_message_from_detail = operation_detail.get("message_operation", "Échec de la libération.")
+            status_code = 400 
+
+            if operation_detail.get("status") == "NON_TROUVE":
                 status_code = 404
-            elif "déjà libre" in message.lower():
-                 status_code = 200
-            return jsonify({"erreur": message}), status_code
-    except Exception as e:
+            elif operation_detail.get("status") == "DEJA_LIBRE":
+                return jsonify({
+                    "message": error_message_from_detail, 
+                    "emplacement": {
+                        "id_emplacement_str": operation_detail["id_emplacement_str"],
+                        "est_libre": True,
+                        "produit_nom": None,
+                        "produit_id": None
+                    }
+                }), 200
+            elif operation_detail.get("status") in ["ERREUR_MARQUAGE", "ERREUR"]:
+                status_code = 500
+            
+            return jsonify({"erreur": error_message_from_detail}), status_code
+
+    except Exception as e: # Intercepte les erreurs inattendues (comme l'ancienne erreur d'unpacking)
         db_session.rollback()
-        print(f"Erreur API liberer_emplacement_api_route: {e}")
-        return jsonify({"erreur": f"Erreur interne du serveur lors de la libération."}), 500
+        # L'erreur "too many values to unpack" se produisait AVANT cette modification, à la ligne d'appel.
+        # Maintenant, elle ne devrait plus se produire si mon_entrepot.liberer_emplacement_par_id retourne bien un dict.
+        print(f"Erreur API liberer_emplacement_api_route (bloc Exception): {type(e).__name__} - {str(e)}")
+        return jsonify({"erreur": f"Erreur interne du serveur lors de la libération: {str(e)}"}), 500
     finally:
         db_session.close()
 
