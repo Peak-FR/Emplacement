@@ -421,6 +421,7 @@ button:hover {
 }
 
 .result-box {
+    box-sizing: border-box;
     margin-top: 15px;
     border: 1px solid #ddd;
     padding: 15px;
