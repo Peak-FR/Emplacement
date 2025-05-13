@@ -49,7 +49,7 @@ Suivez ces étapes pour configurer l'application en local ou sur un serveur de d
     * Créez un utilisateur PostgreSQL (par exemple, `Pierrick`) et accordez-lui les droits nécessaires sur cette base de données.
         ```sql
         -- Exemple de commandes SQL (à exécuter en tant que superutilisateur PostgreSQL)
-        -- CREATE USER Pierrick WITH PASSWORD 'PierrickMELFR13!'; -- Attention au mot de passe
+        -- CREATE USER Pierrick WITH PASSWORD 'AZERTY';
         -- CREATE DATABASE entrepot_db OWNER Pierrick;
         -- GRANT ALL PRIVILEGES ON DATABASE entrepot_db TO Pierrick;
         ```
