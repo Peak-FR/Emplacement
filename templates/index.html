@@ -12,8 +12,13 @@
 <body>
 
     <div id="sideNav">
+
         <div class="nav-header"><img src="{{ url_for('static', filename='images/logo-simple.png') }}"
                 alt="Logo E-Liquide-FR"></div>
+        <div class="sidebar-header">
+            <span id="nomUtilisateurConnecte" style="color: #f0f0f0; font-size: 0.8em; padding-left: 15px;"></span>
+            <button id="logoutButton" class="sidebar-logout-button">Déconnexion</button>
+        </div>
         <span class="nav-group-title"><i class="fa-solid fa-house"></i></span>
         <a href="#sectionAccueil" onclick="showSection('sectionAccueil'); closeSideNavIfMobile();" class="active">
             <span class="link-text">Accueil</span>
@@ -272,7 +277,7 @@
                             data-aisle-sub="1"><span>B</span></div>
                     </div>
                     <div class="plan-zone zone-a-cote" id="zone-a-reste">
-                        <div class="allee-visual-segment segment-a-cote-haut"  onclick="chargerEtAfficherAllee('A', 14)"
+                        <div class="allee-visual-segment segment-a-cote-haut" onclick="chargerEtAfficherAllee('A', 14)"
                             data-aisle-main="A" data-aisle-sub="2">
                             <span>A</span><small>(Racks 14-24)</small>
                         </div>
