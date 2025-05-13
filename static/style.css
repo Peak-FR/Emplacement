@@ -152,14 +152,33 @@ header h1 {
 }
 
 #sideNav .nav-header {
-    padding: 10px 15px 20px 15px;
+    padding: 5px 7px 10px 7px;
     text-align: center;
     color: white;
-    font-size: 1.5em;
+    font-size: 1em;
     margin-bottom: 10px;
 }
 #sideNav .nav-header img{
     max-width: 70%;
+}
+.sidebar-header {
+    margin: 20px 0;
+}
+.sidebar-logout-button {
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    text-align: left;
+    width: 100%;
+    font-size: 0.8em;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 3px;
+}
+
+.sidebar-logout-button:hover {
+    background-color: #a93226;
 }
 
 #sideNav .nav-group-title {
