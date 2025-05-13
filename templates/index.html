@@ -316,17 +316,24 @@
             <div id="sectionHistorique" class="section hidden">
                 <h2>Historique des Mouvements</h2>
                 <div class="historique-filtres">
-                    <label for="histTypeAction">Type d'action:</label>
+                    <div> <label for="histTypeAction">Type d'action :</label>
                     <select id="histTypeAction">
                         <option value="">Tous</option>
                         <option value="ASSIGNATION">Assignations</option>
                         <option value="LIBERATION">Libérations</option>
                     </select>
-                    <label for="histIdEmplacement">ID Emplacement:</label>
-                    <input type="text" id="histIdEmplacement" placeholder="Partie de l'ID Emplacement">
-                    <label for="histIdProduit">ID Produit:</label>
+                    </div> 
+                    <div> 
+                    <label for="histIdEmplacement">Emplacement :</label>
+                    <input type="text" id="histIdEmplacement" placeholder="Partie de l'Emplacement">
+                    </div>
+                    <div> 
+                    <label for="histIdProduit">ID Produit :</label>
                     <input type="text" id="histIdProduit" placeholder="Partie de l'ID Produit">
+                    </div>
+                    <div>  
                     <button onclick="chargerHistorique(1)">Filtrer / Actualiser</button>
+                    </div> 
                 </div>
 
                 <div id="resultatsHistorique" style="margin-top:15px;">
