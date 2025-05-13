@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emplacements Entrepôt</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://kit.fontawesome.com/13b1a2801f.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <div id="sideNav">
+        <div class="nav-header"><img src="{{ url_for('static', filename='images/logo-simple.png') }}"
+                alt="Logo E-Liquide-FR"></div>
+        <span class="nav-group-title"><i class="fa-solid fa-house"></i></span>
+        <a href="#sectionAccueil" onclick="showSection('sectionAccueil'); closeSideNavIfMobile();" class="active">
+            <span class="link-text">Accueil</span>
+        </a>
+
+        <span class="nav-group-title"><i class="fa-solid fa-magnifying-glass"></i><br>Visualisation</span>
+        <a href="#sectionPlan" onclick="showSection('sectionPlan'); closeSideNavIfMobile();">
+            <span class="link-text">Plan de l'entrepôt</span>
+        </a>
+        <a href="#sectionConsulter" onclick="showSection('sectionConsulter'); closeSideNavIfMobile();">
+            <span class="link-text">Consulter Emplacement</span>
+        </a>
+        <a href="#sectionRechercherProduit" onclick="showSection('sectionRechercherProduit'); closeSideNavIfMobile();">
+            <span class="link-text">Rechercher Produit</span>
+        </a>
+
+        <span class="nav-group-title"><i class="fa-solid fa-dolly"></i><br>Opérations</span>
+        <a href="#sectionTrouver" onclick="showSection('sectionTrouver'); closeSideNavIfMobile();">
+            <span class="link-text">Trouver Emplacement Libre</span>
+        </a>
+        <a href="#sectionAssignerRapide" onclick="showSection('sectionAssignerRapide'); closeSideNavIfMobile();">
+            <span class="link-text">Assigner Nouveau Produit</span>
+        </a>
+        <a href="#sectionAssignerMasse" onclick="showSection('sectionAssignerMasse'); closeSideNavIfMobile();">
+            <span class="link-text">Assigner Produits en Masse</span>
+        </a>
+        <a href="#sectionLibererMasse" onclick="showSection('sectionLibererMasse'); closeSideNavIfMobile();">
+            <span class="link-text">Libérer Plusieurs Emplacements</span>
+        </a>
+        <span class="nav-group-title"><i class="fa-solid fa-chart-line"></i><br>Suivi</span>
+        <a href="#sectionHistorique"
+            onclick="showSection('sectionHistorique'); chargerHistorique(1); closeSideNavIfMobile();">
+            <span class="link-text">Historique Mouvements</span>
+        </a>
+        <a href="#sectionStatistiques"
+            onclick="showSection('sectionStatistiques'); chargerStatistiques(); closeSideNavIfMobile();">
+            <span class="link-text">Statistiques</span>
+        </a>
+    </div>
+
+    <div class="mobile-menu-toggle" onclick="toggleSideNav()">
+        &#9776;
+    </div>
+
+
+    <div id="mainContent">
+        <header>
+            <img id="logo" src="{{ url_for('static', filename='images/logo-ELFR.png') }}" alt="Logo E-Liquide-FR">
+            <h1>Gestionnaire d'Entrepôt E-Liquide-FR</h1>
+        </header>
+
+        <div class="container">
+            <div id="sectionAccueil" class="section">
+                <h2>Bienvenue dans la Gestion des Emplacements</h2>
+                <div class="accueil-actions">
+                    <div class="action-groupe">
+
+                        <h3><i class="fa-solid fa-magnifying-glass fa-xl"></i><br>Visualisation & Recherche</h3>
+                        <button onclick="showSection('sectionPlan');">Voir le Plan de l'Entrepôt</button>
+                        <button onclick="showSection('sectionConsulter');">Consulter un Emplacement</button>
+                        <button onclick="showSection('sectionRechercherProduit');">Rechercher un Produit</button>
+                    </div>
+                    <div class="action-groupe">
+                        <h3><i class="fa-solid fa-dolly fa-xl"></i><br>Opérations sur Emplacements</h3>
+                        <button onclick="showSection('sectionTrouver');">Trouver un Emplacement Libre</button>
+                        <button onclick="showSection('sectionAssignerRapide');">Assigner un Nouveau Produit</button>
+                        <button onclick="showSection('sectionAssignerMasse');">Assigner Produits en Masse</button>
+                        <button onclick="showSection('sectionLibererMasse');">Libérer Plusieurs Emplacements</button>
+                    </div>
+                    <div class="action-groupe">
+                        <h3><i class="fa-solid fa-chart-line fa-xl"></i><br>Suivi & Analyse</h3>
+                        <button onclick="showSection('sectionHistorique'); chargerHistorique(1);">Voir l'Historique des
+                            Mouvements</button>
+                        <button onclick="showSection('sectionStatistiques'); chargerStatistiques();">Voir les
+                            Statistiques</button>
+                    </div>
+                </div>
+                <h2>Principales Statistiques</h2>
+                <div id="accueilStatsKPIs" class="accueil-kpis" style="margin-top: 30px;">
+                    <p>Chargement des indicateurs clés...</p>
+                </div>
+
+                <div style="display: flex; flex-direction: row; justify-content: center;">
+                    <button onclick="showSection('sectionStatistiques'); chargerStatistiques();">
+                        Voir Toutes les Statistiques Détaillées
+                    </button>
+                    <button onclick="chargerStatistiquesAccueil()" class="btn-refresh-stats">Rafraîchir Stats</button>
+                </div>
+            </div>
+
+            <div id="sectionConsulter" class="section hidden">
+                <h2>Consulter un Emplacement</h2>
+                <label for="emplacementIdInput">ID de l'emplacement (ex: A1-1-1):</label>
+                <input type="text" id="emplacementIdInput" placeholder="ex: A1-1-1">
+                <button onclick="getEmplacementDetails()">Voir Détails</button>
+                <div id="detailsEmplacement" class="result-box">
+                    <p>Entrez un ID et cliquez sur "Voir Détails".</p>
+                </div>
+            </div>
+
+            <div id="sectionTrouver" class="section hidden">
+                <h2>Trouver un Emplacement Libre Optimal</h2>
+                <div>
+                    <label for="tailleRequiseSelect">Taille requise :</label>
+                    <select id="tailleRequiseSelect">
+                        <option value="Petit">Petit</option>
+                        <option value="Moyen">Moyen</option>
+                        <option value="Grand">Grand</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="checkbox" id="eparpillageTotalCheck" checked>
+                    <label for="eparpillageTotalCheck">Mode Éparpillement Total (aléatoire)</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="exclureAlleeJCheck" checked>
+                    <label for="exclureAlleeJCheck">Exclure Allée J</label>
+                </div>
+                <button onclick="findOptimalEmplacement()">Trouver Emplacement Libre</button>
+                <button onclick="findOptimalInAlleeJ()">Forcer Recherche en Allée J</button>
+                <div id="optimalEmplacementResult" class="result-box">
+                    <p>Sélectionnez les critères et cliquez sur "Trouver Emplacement Libre".</p>
+                </div>
+            </div>
+
+            <div id="assignationFormSection" class="section form-assignation hidden">
+                <h2>Assigner un Produit à <span id="assignEmplacementIdLabel"></span></h2>
+                <input type="hidden" id="assignEmplacementIdHidden">
+                <div>
+                    <label for="assignNomProduit">Nom du produit :</label>
+                    <input type="text" id="assignNomProduit" placeholder="Nom du produit" required>
+                </div>
+                <div>
+                    <label for="assignIdProduit">ID du produit :</label>
+                    <input type="text" id="assignIdProduit" placeholder="ID du produit" required>
+                </div>
+                <button onclick="submitAssignation()">Assigner ce Produit</button>
+                <div id="assignationResult" class="result-box" style="margin-top:10px;"></div>
+            </div>
+
+            <div id="sectionAssignerRapide" class="section hidden">
+                <h2>Assigner un Nouveau Produit (Automatique)</h2>
+                <p>Entrez les détails du produit, le système trouvera et assignera un emplacement optimal.</p>
+                <div>
+                    <label for="quickAssignNomProduit">Nom du produit :</label>
+                    <input type="text" id="quickAssignNomProduit" placeholder="Nom du nouveau produit" required>
+                </div>
+                <div>
+                    <label for="quickAssignIdProduit">ID du produit :</label>
+                    <input type="text" id="quickAssignIdProduit" placeholder="ID du produit" required>
+                </div>
+                <div>
+                    <label for="quickAssignTailleRequise">Taille requise :</label>
+                    <select id="quickAssignTailleRequise">
+                        <option value="Petit">Petit</option>
+                        <option value="Moyen" selected>Moyen</option>
+                        <option value="Grand">Grand</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="checkbox" id="quickAssignEparpillementTotal" checked>
+                    <label for="quickAssignEparpillementTotal">Mode Éparpillement Total</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="quickAssignExclureJ" checked>
+                    <label for="quickAssignExclureJ">Exclure Allée J pour la recherche</label>
+                </div>
+                <button onclick="submitQuickAssignProduct()">Trouver et Assigner Produit</button>
+                <div id="quickAssignResult" class="result-box"></div>
+            </div>
+
+            <div id="sectionAssignerMasse" class="section hidden">
+                <h2>Assigner Plusieurs Nouveaux Produits (Automatique)</h2>
+
+                <div id="batchAssignStep1">
+                    <p><b>Étape 1:</b> Collez les informations des produits (un par ligne) au format : <br>
+                        <code>ID_Produit [TABULATION] Nom_du_Produit</code>
+                    </p>
+                    <textarea id="batchAssignProductsTextarea" rows="5"
+                        placeholder="41795378	Kit Pixo Neo - Aspire / Green&#x0a;41877633	Boysenberry 50VG - Alfaliquid / 10ml 3mg"></textarea>
+                    <button onclick="processPastedProductsForSizeSpecification()">Valider et Spécifier les
+                        Tailles</button>
+                </div>
+
+                <div id="batchAssignStep2" class="hidden">
+                    <p><b>Étape 2:</b> Vérifiez les produits et spécifiez la taille requise pour chacun (Moyen par
+                        défaut).
+                    </p>
+                    <div id="specifySizesContainer" style="margin-bottom: 15px;">
+                    </div>
+                    <hr>
+                    <p>Options globales pour cette assignation en masse :</p>
+                    <div>
+                        <input type="checkbox" id="batchAssignExclureJ" checked>
+                        <label for="batchAssignExclureJ">Exclure Allée J pour la recherche globale</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="trueBatchAssignEparpillementTotal" checked> <label
+                            for="trueBatchAssignEparpillementTotal">Mode Éparpillement Total pour ce lot</label>
+                    </div>
+                    <button onclick="submitFinalBatchAssignProducts()">Lancer l'Assignation en Masse</button>
+                </div>
+
+                <div id="trueBatchAssignResult" class="result-box" style="margin-top:15px;">
+                </div>
+                <button id="copyEmplacementsBtn" class="hidden" onclick="copyAssignedEmplacements()">Copier la Liste des
+                    Emplacements Assignés</button>
+            </div>
+
+            <div id="sectionLibererMasse" class="section hidden">
+                <h2>Libérer Plusieurs Emplacements</h2>
+                <p>Entrez une liste d'IDs d'emplacements à libérer (un ID par ligne) :</p>
+                <textarea id="batchLiberateIdsTextarea" placeholder="A1-1-1&#x0a;A1-1-2&#x0a;B2-3-4"></textarea>
+                <button onclick="submitBatchLiberation()">Libérer ces Emplacements</button>
+                <div id="batchLiberateResult" class="result-box"></div>
+            </div>
+
+            <div id="sectionPlan" class="section hidden">
+                <h2>Plan de l'Entrepôt</h2>
+                <p>Sur mobile, les allées sont listées pour une meilleure lisibilité.</p>
+                <div class="plan-entrepot-wrapper-avec-zones">
+                    <div class="plan-zone zone-a-haut">
+                        <div class="allee-visual-segment segment-a-haut" onclick="chargerEtAfficherAllee('A')"
+                            data-aisle-main="A" data-aisle-sub="1">
+                            <span>A </span><small>(Racks 1-13)</small>
+                        </div>
+                    </div>
+                    <div class="plan-zone zone-j" id="zone-j">
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('J')" data-aisle-main="J"
+                            data-aisle-sub="1">
+                            <span>J</span>
+                        </div>
+                    </div>
+                    <div class="plan-zone zone-ih">
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('I')" data-aisle-main="I"
+                            data-aisle-sub="1"><span>I</span></div>
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('H')" data-aisle-main="H"
+                            data-aisle-sub="1"><span>H</span></div>
+                    </div>
+                    <div class="plan-zone zone-gf">
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('G')" data-aisle-main="G"
+                            data-aisle-sub="1"><span>G</span></div>
+                        <div class="allee-visual" id="zone-f" onclick="chargerEtAfficherAllee('F')" data-aisle-main="F"
+                            data-aisle-sub="1"><span>F</span></div>
+                    </div>
+                    <div class="plan-zone zone-ed">
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('E')" data-aisle-main="E"
+                            data-aisle-sub="1"><span>E</span></div>
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('D')" data-aisle-main="D"
+                            data-aisle-sub="1"><span>D</span></div>
+                    </div>
+                    <div class="plan-zone zone-cb">
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('C')" data-aisle-main="C"
+                            data-aisle-sub="1"><span>C</span></div>
+                        <div class="allee-visual" onclick="chargerEtAfficherAllee('B')" data-aisle-main="B"
+                            data-aisle-sub="1"><span>B</span></div>
+                    </div>
+                    <div class="plan-zone zone-a-cote" id="zone-a-reste">
+                        <div class="allee-visual-segment segment-a-cote-haut"  onclick="chargerEtAfficherAllee('A', 14)"
+                            data-aisle-main="A" data-aisle-sub="2">
+                            <span>A</span><small>(Racks 14-24)</small>
+                        </div>
+                        <div class="allee-visual-segment segment-a-cote-bas" onclick="chargerEtAfficherAllee('A', 25)"
+                            data-aisle-main="A" data-aisle-sub="3">
+                            <span>A</span><small>(Racks 25-30)</small>
+                        </div>
+                    </div>
+                </div>
+                <div id="detailsDeLAlleeAffichee" class="section" style="margin-top:20px;">
+                    <p>Cliquez sur une allée du plan pour voir ses détails.</p>
+                    <div id="visualisationAlleeConteneur" style="margin-top: 20px; overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <div id="sectionRechercherProduit" class="section hidden">
+                <h2>Rechercher un Produit dans l'Entrepôt</h2>
+                <div>
+                    <label for="termeRechercheProduitInput">ID ou Nom du produit :</label>
+                    <input type="text" id="termeRechercheProduitInput" placeholder="Entrez ID exact ou partie du nom">
+                    <button onclick="submitRechercheProduit()">Rechercher</button>
+                </div>
+                <div id="resultatsRechercheProduit" class="result-box" style="margin-top:15px;">
+                    <p>Entrez un terme de recherche et cliquez sur "Rechercher".</p>
+                </div>
+            </div>
+
+            <div id="sectionStatistiques" class="section hidden">
+                <h2>Statistiques de l'Entrepôt</h2>
+                <button onclick="chargerStatistiques()">Afficher / Mettre à jour les Statistiques</button>
+                <div id="resultatsStatistiques" class="result-box" style="margin-top:15px;">
+                    <p>Cliquez sur le bouton pour charger les statistiques.</p>
+                </div>
+            </div>
+
+            <div id="sectionHistorique" class="section hidden">
+                <h2>Historique des Mouvements</h2>
+                <div class="historique-filtres">
+                    <label for="histTypeAction">Type d'action:</label>
+                    <select id="histTypeAction">
+                        <option value="">Tous</option>
+                        <option value="ASSIGNATION">Assignations</option>
+                        <option value="LIBERATION">Libérations</option>
+                    </select>
+                    <label for="histIdEmplacement">ID Emplacement:</label>
+                    <input type="text" id="histIdEmplacement" placeholder="Partie de l'ID Emplacement">
+                    <label for="histIdProduit">ID Produit:</label>
+                    <input type="text" id="histIdProduit" placeholder="Partie de l'ID Produit">
+                    <button onclick="chargerHistorique(1)">Filtrer / Actualiser</button>
+                </div>
+
+                <div id="resultatsHistorique" style="margin-top:15px;">
+                </div>
+                <div id="paginationHistorique" style="margin-top:15px; text-align:center;">
+                </div>
+            </div>
+
+            <div id="actionEmplacementModalOverlay" class="modal-overlay hidden"></div>
+            <div id="actionEmplacementModal" class="modal hidden">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Action sur l'Emplacement</h3>
+                    <button class="modal-close-btn" onclick="closeActionModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBodyContent">
+                </div>
+            </div>
+
+            <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
