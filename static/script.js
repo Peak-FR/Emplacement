@@ -1114,7 +1114,7 @@ async function chargerHistorique(page = 1) {
 
             if (data.mouvements && data.mouvements.length > 0) {
                 let htmlResult = `<table class="stats-table">
-                                    <thead><tr><th>Date/Heure</th><th>Action</th><th>Emplacement</th><th>ID Produit</th><th>Nom Produit</th><<th>Utilisateur</th>/tr></thead>
+                                    <thead><tr><th>Date/Heure</th><th>Action</th><th>Emplacement</th><th>ID Produit</th><th>Nom Produit</th><th>Utilisateur</th></thead>
                                     <tbody>`;
                 data.mouvements.forEach(m => {
                     htmlResult += `<tr>
