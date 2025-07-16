@@ -55,17 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    let lastBatchAssignDetails = [];
-    const copyButton = document.getElementById('copyEmplacementsBtn');
-    if (copyButton) {
-        copyButton.addEventListener('click', function() {
-            console.log("DEBUG: Bouton 'Copier la Liste...' cliqué !"); // Vérifie si le clic est détecté
-            copyAssignedEmplacements();
-        });
-    } else {
-        console.error("DEBUG: Bouton 'copyEmplacementsBtn' non trouvé lors de l'attachement de l'écouteur.");
-    }
-
     const batchAssignTextarea = document.getElementById('batchAssignProductsTextarea');
     const batchLiberateTextarea = document.getElementById('batchLiberateIdsTextarea');
 
@@ -546,13 +535,12 @@ async function submitBatchLiberation() {
 }
 
 let produitsPourBatchAvecTailles = [];
-// Nous n'aurons plus besoin de stocker les éléments select, mais plutôt les conteneurs des radios ou les radios eux-mêmes.
-// Pour simplifier, nous allons travailler avec les noms de groupe pour les radios.
 
 async function processPastedProductsForSizeSpecification() {
     const productsTextarea = document.getElementById('batchAssignProductsTextarea');
     const specifySizesContainer = document.getElementById('specifySizesContainer');
     const resultDiv = document.getElementById('trueBatchAssignResult');
+
 
     resultDiv.innerHTML = "";
     specifySizesContainer.innerHTML = "";
@@ -590,30 +578,18 @@ async function processPastedProductsForSizeSpecification() {
         const id_produit = parts[0];
         const nom_produit = parts[1];
 
-        let default_taille = "Moyen"; // Taille par défaut générale
-        
-        const nom_produit_lower = nom_produit.toLowerCase();
-        console.log(`Produit: ${nom_produit}, Nom Lower: ${nom_produit_lower}`);
+        produitsPourBatchAvecTailles.push({ id_produit, nom_produit });
 
-        if (nom_produit_lower.startsWith('kit') || nom_produit_lower.startsWith('box')) {
-              default_taille = "Grand"; // Prérégler à "Grand" si le nom commence par 'Kit' ou 'Box'
-        }
-        console.log(`Taille par défaut déterminée pour "${nom_produit}": ${default_taille}`);
-        
-        produitsPourBatchAvecTailles.push({ id_produit, nom_produit, taille_requise: default_taille });
-
-        // Génération des boutons radio pour chaque produit
         htmlGeneratedForSizes += `
             <tr>
                 <td>${id_produit}</td>
                 <td>${nom_produit}</td>
                 <td>
-                    <input type="radio" id="taille_produit_${index}_petit" name="taille_produit_${index}" value="Petit" ${default_taille === "Petit" ? "checked" : ""}>
-                    <label for="taille_produit_${index}_petit">Petit</label>
-                    <input type="radio" id="taille_produit_${index}_moyen" name="taille_produit_${index}" value="Moyen" ${default_taille === "Moyen" ? "checked" : ""}>
-                    <label for="taille_produit_${index}_moyen">Moyen</label>
-                    <input type="radio" id="taille_produit_${index}_grand" name="taille_produit_${index}" value="Grand" ${default_taille === "Grand" ? "checked" : ""}>
-                    <label for="taille_produit_${index}_grand">Grand</label>
+                    <select id="taille_produit_${index}">
+                        <option value="Petit">Petit</option>
+                        <option value="Moyen" selected>Moyen</option>
+                        <option value="Grand">Grand</option>
+                    </select>
                 </td>
             </tr>`;
     }
@@ -634,37 +610,6 @@ async function processPastedProductsForSizeSpecification() {
     }
 }
 
-// NOUVELLE FONCTION (modifiée) : Appliquer une taille choisie à tous les boutons radio individuels
-function appliquerTailleGlobaleAuBatch() {
-    // Récupérer la valeur du bouton radio global sélectionné
-    const tailleRadioElements = document.querySelectorAll('input[name="tailleGlobaleBatchApply"]:checked');
-    if (tailleRadioElements.length === 0) {
-        alert("Veuillez sélectionner une taille (Petit, Moyen, Grand) à appliquer globalement.");
-        return;
-    }
-    const tailleChoisie = tailleRadioElements[0].value;
-
-    if (produitsPourBatchAvecTailles.length === 0) {
-        alert("Aucun produit à mettre à jour. Veuillez d'abord valider les produits.");
-        return;
-    }
-
-    // Parcourir chaque groupe de boutons radio individuels et cocher la bonne option
-    produitsPourBatchAvecTailles.forEach((prod, index) => {
-        const radioName = `taille_produit_${index}`;
-        const radios = document.querySelectorAll(`input[name="${radioName}"]`);
-        radios.forEach(radio => {
-            if (radio.value === tailleChoisie) {
-                radio.checked = true;
-            } else {
-                radio.checked = false; // Décocher les autres options
-            }
-        });
-    });
-
-}
-
-
 async function submitFinalBatchAssignProducts() {
     const resultDiv = document.getElementById('trueBatchAssignResult');
     const copyButton = document.getElementById('copyEmplacementsBtn');
@@ -672,20 +617,20 @@ async function submitFinalBatchAssignProducts() {
     const eparpillementTotal = document.getElementById('trueBatchAssignEparpillementTotal').checked;
 
     if (produitsPourBatchAvecTailles.length === 0) {
-        resultDiv.innerHTML = '<p class="error-message">Aucun produit n\'a été préparé pour l\'assignation. Veuillez d\'abord valider les produits et spécifier les tailles.</p>';
+        resultDiv.innerHTML = '<p class="error-message">Aucun produit n_a été préparé pour l_assignation. Veuillez d_abord valider les produits et spécifier les tailles.</p>';
         return;
     }
 
     const produits_payload = produitsPourBatchAvecTailles.map((prod, index) => {
-        // Pour les boutons radio, on cherche celui qui est 'checked' dans le groupe spécifique
-        const tailleInputRadio = document.querySelector(`input[name="taille_produit_${index}"]:checked`);
+        const tailleSelect = document.getElementById(`taille_produit_${index}`);
         return {
             id_produit: prod.id_produit,
             nom_produit: prod.nom_produit,
-            taille_requise: tailleInputRadio ? tailleInputRadio.value : "Moyen" // Fallback
+            taille_requise: tailleSelect ? tailleSelect.value : "Moyen"
         };
     });
 
+    lastBatchAssignDetails = [];
     resultDiv.innerHTML = '<p>Assignation en masse en cours...</p>';
 
     const payloadAPI = {
@@ -709,7 +654,7 @@ async function submitFinalBatchAssignProducts() {
             if (responseData.message) {
                 tableHtml += `<p class="info-message">${responseData.message}</p>`;
             }
-            tableHtml += `<table class="stats-table resultats-batch-table">
+            tableHtml += `<table class="stats-table resultats-batch-table"> 
                             <thead>
                                 <tr>
                                     <th>ID Produit Entrée</th>
@@ -749,7 +694,6 @@ async function submitFinalBatchAssignProducts() {
             document.getElementById('batchAssignStep2').classList.add('hidden');
             document.getElementById('batchAssignStep1').classList.remove('hidden');
             produitsPourBatchAvecTailles = [];
-            // Pas besoin de vider selectElementsPourTailles ici car on n'utilise plus ce tableau
 
         } else if (responseData.erreur) {
             resultDiv.innerHTML = `<p class="error-message">Erreur ${response.status}: ${responseData.erreur}</p>`;
@@ -757,119 +701,34 @@ async function submitFinalBatchAssignProducts() {
             resultDiv.innerHTML = `<p class="error-message">Réponse inattendue du serveur (Statut ${response.status}).</p>`;
         }
     } catch (error) {
-        console.error('Erreur lors de l\'assignation en masse:', error);
-        resultDiv.innerHTML = `<p class="error-message">Impossible de contacter le serveur pour l\'assignation en masse.</p>`;
+        console.error('Erreur lors de l_assignation en masse:', error);
+        resultDiv.innerHTML = `<p class="error-message">Impossible de contacter le serveur pour l_assignation en masse.</p>`;
     }
 }
 
 function copyAssignedEmplacements() {
-    console.log("DEBUG: Fonction copyAssignedEmplacements appelée. Timestamp: " + Date.now());
     const resultDiv = document.getElementById('trueBatchAssignResult');
-    if (!resultDiv) {
-        // Si resultDiv n'existe pas, on ne peut pas afficher de message à l'utilisateur ici.
-        // Une erreur console est appropriée si cet élément est essentiel.
-        console.error("L'élément 'trueBatchAssignResult' pour afficher les messages est introuvable.");
-        return;
-    }
-
-    // Nettoyer les anciens messages de copie avant d'en ajouter un nouveau (pour éviter les doublons)
-    const existingMessages = resultDiv.querySelectorAll('.copy-feedback-message');
-    existingMessages.forEach(msg => msg.remove());
-
-    if (!lastBatchAssignDetails || lastBatchAssignDetails.length === 0) {
-        const p = document.createElement('p');
-        p.className = 'error-message copy-feedback-message';
-        p.innerHTML = '<br>Aucun résultat à copier (la liste des assignations est vide).';
-        resultDiv.appendChild(p);
+    if (lastBatchAssignDetails.length === 0) {
+        if (resultDiv) resultDiv.innerHTML += '<br><p class="error-message">Aucun résultat à copier.</p>';
         return;
     }
 
     const emplacementsText = lastBatchAssignDetails
-        .filter(detail => detail.statut === "Assigné" && detail.emplacement_assigne)
-        .map(detail => detail.emplacement_assigne)
+        .map(detail => detail.emplacement_assigne || "")
         .join('\n');
 
     if (!emplacementsText.trim()) {
-        const p = document.createElement('p');
-        p.className = 'info-message copy-feedback-message';
-        p.innerHTML = '<br>Aucun emplacement n\'a été assigné avec succès dans ce lot pour être copié.';
-        resultDiv.appendChild(p);
-        return;
-    }
-
-    // Vérifier si l'API du presse-papiers est disponible
-    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
-        const pError = document.createElement('p');
-        pError.className = 'error-message copy-feedback-message';
-        pError.innerHTML = '<br>La copie automatique dans le presse-papiers n\'est pas supportée par votre navigateur ou dans ce contexte.';
-        resultDiv.appendChild(pError);
-
-        if (!window.isSecureContext) {
-            const pNote = document.createElement('p');
-            pNote.className = 'info-message copy-feedback-message';
-            const smallNote = document.createElement('small');
-            smallNote.textContent = 'Note: La copie dans le presse-papiers est souvent restreinte aux contextes non sécurisés (HTTP) autres que localhost.';
-            pNote.appendChild(document.createElement('br'));
-            pNote.appendChild(smallNote);
-            resultDiv.appendChild(pNote);
-        }
-        // Proposer une alternative : afficher le texte à copier
-        const pAlternative = document.createElement('p');
-        pAlternative.className = 'info-message copy-feedback-message';
-        pAlternative.innerHTML = '<br>Vous pouvez copier manuellement le texte ci-dessous :';
-        resultDiv.appendChild(pAlternative);
-
-        const textarea = document.createElement('textarea');
-        textarea.value = emplacementsText;
-        textarea.rows = Math.min(5, emplacementsText.split('\n').length); // Ajuster le nombre de lignes
-        textarea.style.width = "100%";
-        textarea.style.fontFamily = "monospace";
-        textarea.readOnly = true;
-        resultDiv.appendChild(textarea);
-        textarea.focus();
-        textarea.select(); // Sélectionner le texte pour faciliter la copie manuelle
+        if (resultDiv) resultDiv.innerHTML += '<br><p class="info-message">Aucun emplacement n_a été assigné dans ce lot.</p>';
         return;
     }
 
     navigator.clipboard.writeText(emplacementsText)
         .then(() => {
-            const p = document.createElement('p');
-            p.className = 'info-message copy-feedback-message';
-            p.style.fontWeight = 'bold';
-            p.innerHTML = '<br>Liste des emplacements assignés copiée dans le presse-papiers !';
-            resultDiv.appendChild(p);
+            if (resultDiv) resultDiv.innerHTML += '<br><p class="info-message" style="font-weight:bold;">Liste des emplacements assignés copiée dans le presse-papiers !</p>';
         })
         .catch(err => {
             console.error('Erreur lors de la copie dans le presse-papiers: ', err);
-            const pError = document.createElement('p');
-            pError.className = 'error-message copy-feedback-message';
-            pError.innerHTML = '<br>Erreur lors de la copie automatique. Veuillez le faire manuellement.';
-            resultDiv.appendChild(pError);
-
-            if (!window.isSecureContext) {
-                const pNote = document.createElement('p');
-                pNote.className = 'info-message copy-feedback-message';
-                const smallNote = document.createElement('small');
-                smallNote.textContent = 'Rappel: La copie dans le presse-papiers échoue souvent sur les pages non sécurisées (HTTP) autres que localhost.';
-                pNote.appendChild(document.createElement('br'));
-                pNote.appendChild(smallNote);
-                resultDiv.appendChild(pNote);
-            }
-            // Afficher le texte à copier manuellement en cas d'échec
-            const pAlternative = document.createElement('p');
-            pAlternative.className = 'info-message copy-feedback-message';
-            pAlternative.innerHTML = '<br>Vous pouvez copier manuellement le texte ci-dessous :';
-            resultDiv.appendChild(pAlternative);
-
-            const textarea = document.createElement('textarea');
-            textarea.value = emplacementsText;
-            textarea.rows = Math.min(5, emplacementsText.split('\n').length);
-            textarea.style.width = "100%";
-            textarea.style.fontFamily = "monospace";
-            textarea.readOnly = true;
-            resultDiv.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
+            if (resultDiv) resultDiv.innerHTML += '<br><p class="error-message">Erreur lors de la copie. Veuillez le faire manuellement.</p>';
         });
 }
 
