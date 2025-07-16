@@ -192,31 +192,22 @@
 
             <div id="sectionAssignerMasse" class="section hidden">
                 <h2>Assigner Plusieurs Nouveaux Produits (Automatique)</h2>
-            
+
                 <div id="batchAssignStep1">
                     <p><b>Étape 1:</b> Collez les informations des produits (un par ligne) au format : <br>
                         <code>ID_Produit [TABULATION] Nom_du_Produit</code>
                     </p>
                     <textarea id="batchAssignProductsTextarea" rows="5"
-                        placeholder="41795378   Kit Pixo Neo - Aspire / Green&#x0a;41877633 Boysenberry 50VG - Alfaliquid / 10ml 3mg"></textarea>
-                    <button onclick="processPastedProductsForSizeSpecification()">Valider et Spécifier les Tailles</button>
+                        placeholder="41795378	Kit Pixo Neo - Aspire / Green&#x0a;41877633	Boysenberry 50VG - Alfaliquid / 10ml 3mg"></textarea>
+                    <button onclick="processPastedProductsForSizeSpecification()">Valider et Spécifier les
+                        Tailles</button>
                 </div>
-            
+
                 <div id="batchAssignStep2" class="hidden">
-                    <p><b>Étape 2:</b> Vérifiez les produits et spécifiez la taille requise pour chacun (Moyen par défaut).
+                    <p><b>Étape 2:</b> Vérifiez les produits et spécifiez la taille requise pour chacun (Moyen par
+                        défaut).
                     </p>
                     <div id="specifySizesContainer" style="margin-bottom: 15px;">
-                        </div>
-            
-                    <div style="margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #eee;">
-                        <label>Appliquer cette taille à TOUS les produits du lot :</label><br>
-                        <input type="radio" id="radioTailleGlobalePetit" name="tailleGlobaleBatchApply" value="Petit">
-                        <label for="radioTailleGlobalePetit">Petit</label>
-                        <input type="radio" id="radioTailleGlobaleMoyen" name="tailleGlobaleBatchApply" value="Moyen">
-                        <label for="radioTailleGlobaleMoyen">Moyen</label>
-                        <input type="radio" id="radioTailleGlobaleGrand" name="tailleGlobaleBatchApply" value="Grand">
-                        <label for="radioTailleGlobaleGrand">Grand</label>
-                        <button onclick="appliquerTailleGlobaleAuBatch()">Appliquer</button>
                     </div>
                     <hr>
                     <p>Options globales pour cette assignation en masse :</p>
@@ -225,15 +216,16 @@
                         <label for="batchAssignExclureJ">Exclure Allée J pour la recherche globale</label>
                     </div>
                     <div>
-                        <input type="checkbox" id="trueBatchAssignEparpillementTotal" checked>
-                        <label for="trueBatchAssignEparpillementTotal">Mode Éparpillement Total pour ce lot</label>
+                        <input type="checkbox" id="trueBatchAssignEparpillementTotal" checked> <label
+                            for="trueBatchAssignEparpillementTotal">Mode Éparpillement Total pour ce lot</label>
                     </div>
                     <button onclick="submitFinalBatchAssignProducts()">Lancer l'Assignation en Masse</button>
                 </div>
-            
+
                 <div id="trueBatchAssignResult" class="result-box" style="margin-top:15px;">
                 </div>
-                <button id="copyEmplacementsBtn" class="hidden">Copier la Liste des Emplacements Assignés</button>
+                <button id="copyEmplacementsBtn" class="hidden" onclick="copyAssignedEmplacements()">Copier la Liste des
+                    Emplacements Assignés</button>
             </div>
 
             <div id="sectionLibererMasse" class="section hidden">
