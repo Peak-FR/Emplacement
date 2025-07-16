@@ -42,7 +42,7 @@ def initialiser_base_de_donnees_et_peupler():
     except Exception as e:
         print(f"Une erreur s'est produite lors du peuplement de l'entrepôt : {e}")
     finally:
-        db_session.close(
+        db_session.close()
         print("Session de base de données fermée.")
 
 # --- Exécution du script ---
