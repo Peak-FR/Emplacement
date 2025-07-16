@@ -546,12 +546,13 @@ async function submitBatchLiberation() {
 }
 
 let produitsPourBatchAvecTailles = [];
+// Nous n'aurons plus besoin de stocker les éléments select, mais plutôt les conteneurs des radios ou les radios eux-mêmes.
+// Pour simplifier, nous allons travailler avec les noms de groupe pour les radios.
 
 async function processPastedProductsForSizeSpecification() {
     const productsTextarea = document.getElementById('batchAssignProductsTextarea');
     const specifySizesContainer = document.getElementById('specifySizesContainer');
     const resultDiv = document.getElementById('trueBatchAssignResult');
-
 
     resultDiv.innerHTML = "";
     specifySizesContainer.innerHTML = "";
@@ -589,18 +590,30 @@ async function processPastedProductsForSizeSpecification() {
         const id_produit = parts[0];
         const nom_produit = parts[1];
 
-        produitsPourBatchAvecTailles.push({ id_produit, nom_produit });
+        let default_taille = "Moyen"; // Taille par défaut générale
+        
+        const nom_produit_lower = nom_produit.toLowerCase();
+        console.log(`Produit: ${nom_produit}, Nom Lower: ${nom_produit_lower}`);
 
+        if (nom_produit_lower.startsWith('kit') || nom_produit_lower.startsWith('box')) {
+              default_taille = "Grand"; // Prérégler à "Grand" si le nom commence par 'Kit' ou 'Box'
+        }
+        console.log(`Taille par défaut déterminée pour "${nom_produit}": ${default_taille}`);
+        
+        produitsPourBatchAvecTailles.push({ id_produit, nom_produit, taille_requise: default_taille });
+
+        // Génération des boutons radio pour chaque produit
         htmlGeneratedForSizes += `
             <tr>
                 <td>${id_produit}</td>
                 <td>${nom_produit}</td>
                 <td>
-                    <select id="taille_produit_${index}">
-                        <option value="Petit">Petit</option>
-                        <option value="Moyen" selected>Moyen</option>
-                        <option value="Grand">Grand</option>
-                    </select>
+                    <input type="radio" id="taille_produit_${index}_petit" name="taille_produit_${index}" value="Petit" ${default_taille === "Petit" ? "checked" : ""}>
+                    <label for="taille_produit_${index}_petit">Petit</label>
+                    <input type="radio" id="taille_produit_${index}_moyen" name="taille_produit_${index}" value="Moyen" ${default_taille === "Moyen" ? "checked" : ""}>
+                    <label for="taille_produit_${index}_moyen">Moyen</label>
+                    <input type="radio" id="taille_produit_${index}_grand" name="taille_produit_${index}" value="Grand" ${default_taille === "Grand" ? "checked" : ""}>
+                    <label for="taille_produit_${index}_grand">Grand</label>
                 </td>
             </tr>`;
     }
@@ -621,6 +634,37 @@ async function processPastedProductsForSizeSpecification() {
     }
 }
 
+// NOUVELLE FONCTION (modifiée) : Appliquer une taille choisie à tous les boutons radio individuels
+function appliquerTailleGlobaleAuBatch() {
+    // Récupérer la valeur du bouton radio global sélectionné
+    const tailleRadioElements = document.querySelectorAll('input[name="tailleGlobaleBatchApply"]:checked');
+    if (tailleRadioElements.length === 0) {
+        alert("Veuillez sélectionner une taille (Petit, Moyen, Grand) à appliquer globalement.");
+        return;
+    }
+    const tailleChoisie = tailleRadioElements[0].value;
+
+    if (produitsPourBatchAvecTailles.length === 0) {
+        alert("Aucun produit à mettre à jour. Veuillez d'abord valider les produits.");
+        return;
+    }
+
+    // Parcourir chaque groupe de boutons radio individuels et cocher la bonne option
+    produitsPourBatchAvecTailles.forEach((prod, index) => {
+        const radioName = `taille_produit_${index}`;
+        const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+        radios.forEach(radio => {
+            if (radio.value === tailleChoisie) {
+                radio.checked = true;
+            } else {
+                radio.checked = false; // Décocher les autres options
+            }
+        });
+    });
+
+}
+
+
 async function submitFinalBatchAssignProducts() {
     const resultDiv = document.getElementById('trueBatchAssignResult');
     const copyButton = document.getElementById('copyEmplacementsBtn');
@@ -628,16 +672,17 @@ async function submitFinalBatchAssignProducts() {
     const eparpillementTotal = document.getElementById('trueBatchAssignEparpillementTotal').checked;
 
     if (produitsPourBatchAvecTailles.length === 0) {
-        resultDiv.innerHTML = '<p class="error-message">Aucun produit n_a été préparé pour l_assignation. Veuillez d_abord valider les produits et spécifier les tailles.</p>';
+        resultDiv.innerHTML = '<p class="error-message">Aucun produit n\'a été préparé pour l\'assignation. Veuillez d\'abord valider les produits et spécifier les tailles.</p>';
         return;
     }
 
     const produits_payload = produitsPourBatchAvecTailles.map((prod, index) => {
-        const tailleSelect = document.getElementById(`taille_produit_${index}`);
+        // Pour les boutons radio, on cherche celui qui est 'checked' dans le groupe spécifique
+        const tailleInputRadio = document.querySelector(`input[name="taille_produit_${index}"]:checked`);
         return {
             id_produit: prod.id_produit,
             nom_produit: prod.nom_produit,
-            taille_requise: tailleSelect ? tailleSelect.value : "Moyen"
+            taille_requise: tailleInputRadio ? tailleInputRadio.value : "Moyen" // Fallback
         };
     });
 
@@ -664,7 +709,7 @@ async function submitFinalBatchAssignProducts() {
             if (responseData.message) {
                 tableHtml += `<p class="info-message">${responseData.message}</p>`;
             }
-            tableHtml += `<table class="stats-table resultats-batch-table"> 
+            tableHtml += `<table class="stats-table resultats-batch-table">
                             <thead>
                                 <tr>
                                     <th>ID Produit Entrée</th>
@@ -704,6 +749,7 @@ async function submitFinalBatchAssignProducts() {
             document.getElementById('batchAssignStep2').classList.add('hidden');
             document.getElementById('batchAssignStep1').classList.remove('hidden');
             produitsPourBatchAvecTailles = [];
+            // Pas besoin de vider selectElementsPourTailles ici car on n'utilise plus ce tableau
 
         } else if (responseData.erreur) {
             resultDiv.innerHTML = `<p class="error-message">Erreur ${response.status}: ${responseData.erreur}</p>`;
@@ -711,8 +757,8 @@ async function submitFinalBatchAssignProducts() {
             resultDiv.innerHTML = `<p class="error-message">Réponse inattendue du serveur (Statut ${response.status}).</p>`;
         }
     } catch (error) {
-        console.error('Erreur lors de l_assignation en masse:', error);
-        resultDiv.innerHTML = `<p class="error-message">Impossible de contacter le serveur pour l_assignation en masse.</p>`;
+        console.error('Erreur lors de l\'assignation en masse:', error);
+        resultDiv.innerHTML = `<p class="error-message">Impossible de contacter le serveur pour l\'assignation en masse.</p>`;
     }
 }
 
