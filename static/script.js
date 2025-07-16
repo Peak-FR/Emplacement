@@ -55,6 +55,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    let lastBatchAssignDetails = [];
+    const copyButton = document.getElementById('copyEmplacementsBtn');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            console.log("DEBUG: Bouton 'Copier la Liste...' cliqué !"); // Vérifie si le clic est détecté
+            copyAssignedEmplacements();
+        });
+    } else {
+        console.error("DEBUG: Bouton 'copyEmplacementsBtn' non trouvé lors de l'attachement de l'écouteur.");
+    }
+
     const batchAssignTextarea = document.getElementById('batchAssignProductsTextarea');
     const batchLiberateTextarea = document.getElementById('batchLiberateIdsTextarea');
 
@@ -630,7 +641,6 @@ async function submitFinalBatchAssignProducts() {
         };
     });
 
-    lastBatchAssignDetails = [];
     resultDiv.innerHTML = '<p>Assignation en masse en cours...</p>';
 
     const payloadAPI = {
@@ -707,28 +717,113 @@ async function submitFinalBatchAssignProducts() {
 }
 
 function copyAssignedEmplacements() {
+    console.log("DEBUG: Fonction copyAssignedEmplacements appelée. Timestamp: " + Date.now());
     const resultDiv = document.getElementById('trueBatchAssignResult');
-    if (lastBatchAssignDetails.length === 0) {
-        if (resultDiv) resultDiv.innerHTML += '<br><p class="error-message">Aucun résultat à copier.</p>';
+    if (!resultDiv) {
+        // Si resultDiv n'existe pas, on ne peut pas afficher de message à l'utilisateur ici.
+        // Une erreur console est appropriée si cet élément est essentiel.
+        console.error("L'élément 'trueBatchAssignResult' pour afficher les messages est introuvable.");
+        return;
+    }
+
+    // Nettoyer les anciens messages de copie avant d'en ajouter un nouveau (pour éviter les doublons)
+    const existingMessages = resultDiv.querySelectorAll('.copy-feedback-message');
+    existingMessages.forEach(msg => msg.remove());
+
+    if (!lastBatchAssignDetails || lastBatchAssignDetails.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'error-message copy-feedback-message';
+        p.innerHTML = '<br>Aucun résultat à copier (la liste des assignations est vide).';
+        resultDiv.appendChild(p);
         return;
     }
 
     const emplacementsText = lastBatchAssignDetails
-        .map(detail => detail.emplacement_assigne || "")
+        .filter(detail => detail.statut === "Assigné" && detail.emplacement_assigne)
+        .map(detail => detail.emplacement_assigne)
         .join('\n');
 
     if (!emplacementsText.trim()) {
-        if (resultDiv) resultDiv.innerHTML += '<br><p class="info-message">Aucun emplacement n_a été assigné dans ce lot.</p>';
+        const p = document.createElement('p');
+        p.className = 'info-message copy-feedback-message';
+        p.innerHTML = '<br>Aucun emplacement n\'a été assigné avec succès dans ce lot pour être copié.';
+        resultDiv.appendChild(p);
+        return;
+    }
+
+    // Vérifier si l'API du presse-papiers est disponible
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+        const pError = document.createElement('p');
+        pError.className = 'error-message copy-feedback-message';
+        pError.innerHTML = '<br>La copie automatique dans le presse-papiers n\'est pas supportée par votre navigateur ou dans ce contexte.';
+        resultDiv.appendChild(pError);
+
+        if (!window.isSecureContext) {
+            const pNote = document.createElement('p');
+            pNote.className = 'info-message copy-feedback-message';
+            const smallNote = document.createElement('small');
+            smallNote.textContent = 'Note: La copie dans le presse-papiers est souvent restreinte aux contextes non sécurisés (HTTP) autres que localhost.';
+            pNote.appendChild(document.createElement('br'));
+            pNote.appendChild(smallNote);
+            resultDiv.appendChild(pNote);
+        }
+        // Proposer une alternative : afficher le texte à copier
+        const pAlternative = document.createElement('p');
+        pAlternative.className = 'info-message copy-feedback-message';
+        pAlternative.innerHTML = '<br>Vous pouvez copier manuellement le texte ci-dessous :';
+        resultDiv.appendChild(pAlternative);
+
+        const textarea = document.createElement('textarea');
+        textarea.value = emplacementsText;
+        textarea.rows = Math.min(5, emplacementsText.split('\n').length); // Ajuster le nombre de lignes
+        textarea.style.width = "100%";
+        textarea.style.fontFamily = "monospace";
+        textarea.readOnly = true;
+        resultDiv.appendChild(textarea);
+        textarea.focus();
+        textarea.select(); // Sélectionner le texte pour faciliter la copie manuelle
         return;
     }
 
     navigator.clipboard.writeText(emplacementsText)
         .then(() => {
-            if (resultDiv) resultDiv.innerHTML += '<br><p class="info-message" style="font-weight:bold;">Liste des emplacements assignés copiée dans le presse-papiers !</p>';
+            const p = document.createElement('p');
+            p.className = 'info-message copy-feedback-message';
+            p.style.fontWeight = 'bold';
+            p.innerHTML = '<br>Liste des emplacements assignés copiée dans le presse-papiers !';
+            resultDiv.appendChild(p);
         })
         .catch(err => {
             console.error('Erreur lors de la copie dans le presse-papiers: ', err);
-            if (resultDiv) resultDiv.innerHTML += '<br><p class="error-message">Erreur lors de la copie. Veuillez le faire manuellement.</p>';
+            const pError = document.createElement('p');
+            pError.className = 'error-message copy-feedback-message';
+            pError.innerHTML = '<br>Erreur lors de la copie automatique. Veuillez le faire manuellement.';
+            resultDiv.appendChild(pError);
+
+            if (!window.isSecureContext) {
+                const pNote = document.createElement('p');
+                pNote.className = 'info-message copy-feedback-message';
+                const smallNote = document.createElement('small');
+                smallNote.textContent = 'Rappel: La copie dans le presse-papiers échoue souvent sur les pages non sécurisées (HTTP) autres que localhost.';
+                pNote.appendChild(document.createElement('br'));
+                pNote.appendChild(smallNote);
+                resultDiv.appendChild(pNote);
+            }
+            // Afficher le texte à copier manuellement en cas d'échec
+            const pAlternative = document.createElement('p');
+            pAlternative.className = 'info-message copy-feedback-message';
+            pAlternative.innerHTML = '<br>Vous pouvez copier manuellement le texte ci-dessous :';
+            resultDiv.appendChild(pAlternative);
+
+            const textarea = document.createElement('textarea');
+            textarea.value = emplacementsText;
+            textarea.rows = Math.min(5, emplacementsText.split('\n').length);
+            textarea.style.width = "100%";
+            textarea.style.fontFamily = "monospace";
+            textarea.readOnly = true;
+            resultDiv.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
         });
 }
 
